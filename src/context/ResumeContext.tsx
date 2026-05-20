@@ -1,0 +1,212 @@
+'use client';
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+// --- Interfaces pour la structure de données du CV ---
+
+export interface Experience {
+  id: string;
+  jobTitle: string;
+  company: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  tasks: string; 
+}
+
+export interface Education {
+  id: string;
+  degree: string;
+  specialty: string;
+  school: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface LanguageItem {
+  id: string;
+  name: string;
+  level: number; // 0 to 100
+}
+
+export interface PersonalInfo {
+  photoUrl: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string;
+  city: string;
+  phone: string;
+  email: string;
+  dob: string;
+  linkedin: string;
+  website: string;
+}
+
+export interface ResumeData {
+  personalInfo: PersonalInfo;
+  professionalSummary: string;
+  experiences: Experience[];
+  educations: Education[];
+  skills: string;
+  hobbies: string;
+  languages: LanguageItem[];
+  templateId: string;
+}
+
+// --- État initial vide ---
+const initialResumeData: ResumeData = {
+  personalInfo: {
+    photoUrl: '',
+    firstName: '',
+    lastName: '',
+    jobTitle: '',
+    city: '',
+    phone: '',
+    email: '',
+    dob: '',
+    linkedin: '',
+    website: ''
+  },
+  professionalSummary: '',
+  experiences: [],
+  educations: [],
+  skills: '',
+  hobbies: '',
+  languages: [],
+  templateId: 'pro-1'
+};
+
+// --- Type du Contexte ---
+interface ResumeContextType {
+  resumeData: ResumeData;
+  setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
+  updatePersonalInfo: (field: keyof PersonalInfo, value: string) => void;
+  updateSummary: (summary: string) => void;
+  addExperience: (exp: Experience) => void;
+  updateExperience: (id: string, field: keyof Experience, value: string) => void;
+  removeExperience: (id: string) => void;
+  updateEducation: (id: string, field: keyof Education, value: string) => void;
+  removeEducation: (id: string) => void;
+  updateSkills: (skills: string) => void;
+  updateHobbies: (hobbies: string) => void;
+  addLanguage: (lang: LanguageItem) => void;
+  updateLanguage: (id: string, field: keyof LanguageItem, value: string | number) => void;
+  removeLanguage: (id: string) => void;
+  setTemplateId: (id: string) => void;
+  saveResume: () => void;
+}
+
+const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
+
+export function ResumeProvider({ children }: { children: ReactNode }) {
+  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+
+  // Méthodes utilitaires pour faciliter la mise à jour partielle
+  const updatePersonalInfo = (field: keyof PersonalInfo, value: string) => {
+    setResumeData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }));
+  };
+
+  const updateSummary = (summary: string) => {
+    setResumeData(prev => ({ ...prev, professionalSummary: summary }));
+  };
+
+  const addExperience = (exp: Experience) => {
+    setResumeData(prev => ({ ...prev, experiences: [...prev.experiences, exp] }));
+  };
+
+  const updateExperience = (id: string, field: keyof Experience, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      experiences: prev.experiences.map(exp => exp.id === id ? { ...exp, [field]: value } : exp)
+    }));
+  };
+
+  const removeExperience = (id: string) => {
+    setResumeData(prev => ({ ...prev, experiences: prev.experiences.filter(exp => exp.id !== id) }));
+  };
+
+  const addEducation = (edu: Education) => {
+    setResumeData(prev => ({ ...prev, educations: [...prev.educations, edu] }));
+  };
+
+  const updateEducation = (id: string, field: keyof Education, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      educations: prev.educations.map(edu => edu.id === id ? { ...edu, [field]: value } : edu)
+    }));
+  };
+
+  const removeEducation = (id: string) => {
+    setResumeData(prev => ({ ...prev, educations: prev.educations.filter(edu => edu.id !== id) }));
+  };
+
+  const updateSkills = (skills: string) => {
+    setResumeData(prev => ({ ...prev, skills }));
+  };
+
+  const updateHobbies = (hobbies: string) => {
+    setResumeData(prev => ({ ...prev, hobbies }));
+  };
+
+  const addLanguage = (lang: LanguageItem) => {
+    setResumeData(prev => ({ ...prev, languages: [...prev.languages, lang] }));
+  };
+
+  const updateLanguage = (id: string, field: keyof LanguageItem, value: string | number) => {
+    setResumeData(prev => ({
+      ...prev,
+      languages: prev.languages.map(lang => lang.id === id ? { ...lang, [field]: value } : lang)
+    }));
+  };
+
+  const removeLanguage = (id: string) => {
+    setResumeData(prev => ({ ...prev, languages: prev.languages.filter(lang => lang.id !== id) }));
+  };
+
+  const setTemplateId = (id: string) => {
+    setResumeData(prev => ({ ...prev, templateId: id }));
+  };
+
+  const saveResume = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const existing = localStorage.getItem('my_easy_resumes');
+        const resumes = existing ? JSON.parse(existing) : [];
+        const newResume = {
+          id: Date.now(),
+          title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
+          lastEdited: new Date().toLocaleDateString(),
+          thumbnail: resumeData.personalInfo.photoUrl || 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+          data: resumeData
+        };
+        resumes.unshift(newResume);
+        localStorage.setItem('my_easy_resumes', JSON.stringify(resumes));
+      } catch (e) {
+        console.error("Error saving resume", e);
+      }
+    }
+  };
+
+  return (
+    <ResumeContext.Provider value={{
+      resumeData, setResumeData,
+      updatePersonalInfo, updateSummary,
+      addExperience, updateExperience, removeExperience,
+      addEducation, updateEducation, removeEducation,
+      updateSkills, updateHobbies, 
+      addLanguage, updateLanguage, removeLanguage,
+      setTemplateId, saveResume
+    }}>
+      {children}
+    </ResumeContext.Provider>
+  );
+}
+
+export function useResume() {
+  const context = useContext(ResumeContext);
+  if (context === undefined) {
+    throw new Error('useResume must be used within a ResumeProvider');
+  }
+  return context;
+}
