@@ -2,13 +2,16 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu } from "lucide-react";
+import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const { language, toggleLanguage } = useLanguage();
+  const { user } = useAuth();
   return (
     <header className="h-20 w-full flex items-center justify-between px-4 md:px-8 bg-transparent">
       <div className="lg:hidden">
@@ -50,16 +53,30 @@ export function Header() {
         
         <div className="h-8 w-px bg-slate-200 hidden sm:block" />
         
-        <div className="flex items-center space-x-3">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-slate-700">Oumar Fall</p>
-            <p className="text-xs text-slate-500">Premium</p>
+        {user ? (
+          <div className="flex items-center space-x-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-slate-700">{user.first_name} {user.last_name}</p>
+              <div className="flex items-center justify-end space-x-2">
+                <p className="text-xs text-slate-500">{user.plan}</p>
+                {user.role === 'admin' && (
+                  <Link href="/admin/dashboard" className="text-xs px-2 py-0.5 bg-rose-100 text-rose-600 font-bold rounded-md hover:bg-rose-200 transition-colors">
+                    Mode Admin
+                  </Link>
+                )}
+              </div>
+            </div>
+            <Avatar>
+              <AvatarFallback className="bg-[#1062FE] text-white font-bold">
+                {user.first_name?.[0]}{user.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
           </div>
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" alt="@oumar" />
-            <AvatarFallback>OF</AvatarFallback>
-          </Avatar>
-        </div>
+        ) : (
+          <div className="flex items-center space-x-3">
+             <a href="/login" className="text-sm font-semibold text-[#1062FE] hover:underline">Se connecter</a>
+          </div>
+        )}
       </div>
     </header>
   );

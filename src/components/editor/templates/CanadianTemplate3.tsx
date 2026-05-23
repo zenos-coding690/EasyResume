@@ -4,7 +4,7 @@ import { useResume } from '@/context/ResumeContext';
 
 export function CanadianTemplate3() {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, languages } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, languages, references } = resumeData;
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
 
   const getCanadianLangLevelLabel = (level: number) => {
@@ -63,6 +63,23 @@ export function CanadianTemplate3() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* References */}
+        {references && references.length > 0 && (
+          <div className="text-right mt-10">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">References</h3>
+            <div className="space-y-4 text-xs font-semibold text-slate-700">
+              {references.map((ref) => (
+                <div key={ref.id}>
+                  <div className="font-bold text-slate-900">{ref.name}</div>
+                  <div className="text-[10px] text-slate-500 font-medium">{ref.position} — {ref.company}</div>
+                  <div className="text-[10px] text-slate-500">{ref.email}</div>
+                  {ref.phone && <div className="text-[10px] text-slate-500">{ref.phone}</div>}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

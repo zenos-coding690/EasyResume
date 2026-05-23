@@ -11,16 +11,22 @@ import { ContentStep } from '@/components/cover-letter-editor/steps/ContentStep'
 import { Button } from '@/components/ui/button';
 import { Eye, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { useTokens } from '@/context/TokenContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 function CoverLetterEditorContent() {
   const { t } = useLanguage();
   const { letterData, setTemplateId, saveLetter } = useCoverLetter();
+  const { downloadCredits, consumeDownloadCredit, openDownloadModal } = useTokens();
   const router = useRouter();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isProcessingDownload, setIsProcessingDownload] = useState(false);
   const searchParams = useSearchParams();
+  const letterId = searchParams.get('letter');
 
   // Écoute dynamique du modèle choisi dans l'URL (avec garde anti-boucle)
   useEffect(() => {
@@ -29,6 +35,70 @@ function CoverLetterEditorContent() {
       setTemplateId(templateParam);
     }
   }, [searchParams, setTemplateId, letterData.templateId]);
+
+  // Vérification de l'état du déblocage
+  useEffect(() => {
+    const checkUnlockStatus = async () => {
+      if (!letterId) return;
+      const { data } = await supabase.from('cover_letters').select('unlocked_until').eq('id', letterId).single();
+      if (data && data.unlocked_until) {
+        if (new Date(data.unlocked_until) > new Date()) setIsUnlocked(true);
+      }
+    };
+    checkUnlockStatus();
+  }, [letterId]);
+
+  useEffect(() => {
+    if (searchParams.get('print') === '1') {
+      handlePremiumDownload();
+    }
+  }, [searchParams]);
+
+  const triggerPrint = () => {
+    setIsUnlocked(true);
+    setTimeout(() => window.print(), 500);
+  };
+
+  const handlePremiumDownload = async () => {
+    if (!letterId) {
+      alert("Veuillez d'abord 'Terminer & Sauvegarder' votre lettre avant de la télécharger.");
+      return;
+    }
+
+    if (isProcessingDownload) return;
+    setIsProcessingDownload(true);
+
+    try {
+      const { data } = await supabase.from('cover_letters').select('unlocked_until').eq('id', letterId).single();
+      let hasGracePeriod = false;
+      if (data && data.unlocked_until) {
+        if (new Date(data.unlocked_until) > new Date()) hasGracePeriod = true;
+      }
+
+      if (hasGracePeriod) {
+        triggerPrint();
+      } else {
+        if (downloadCredits > 0) {
+          const confirmUnlock = window.confirm(
+            "Télécharger cette lettre (sans filigrane) coûte 1 crédit de téléchargement.\n\n" +
+            "Ce document restera déverrouillé pendant 15 minutes.\n\n" +
+            `Solde actuel : ${downloadCredits} crédits.\n\nConfirmer ?`
+          );
+          if (confirmUnlock) {
+            const success = await consumeDownloadCredit(letterId, 'cover_letter');
+            if (success) triggerPrint();
+            else alert("Erreur lors de l'utilisation du crédit.");
+          }
+        } else {
+          openDownloadModal();
+        }
+      }
+    } catch (e) {
+      alert("Une erreur est survenue.");
+    } finally {
+      setIsProcessingDownload(false);
+    }
+  };
 
   const steps = [
     { title: t('clStepSender'), component: <SenderInfoStep /> },
@@ -40,7 +110,7 @@ function CoverLetterEditorContent() {
   const prevStep = () => setCurrentStepIndex(i => Math.max(i - 1, 0));
 
   return (
-    <div className="fixed inset-0 z-50 flex overflow-hidden bg-[#E0EFFF]/30">
+    <div className={`fixed inset-0 z-50 flex overflow-hidden bg-[#E0EFFF]/30 ${isUnlocked ? 'unlocked-print' : ''}`}>
       
       {/* LEFT PANE: Form Wizard */}
       <div className={`w-full lg:w-[45%] xl:w-[40%] flex flex-col h-full bg-white border-r border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 ${showMobilePreview ? 'hidden lg:flex' : 'flex'} print:hidden`}>
@@ -57,10 +127,11 @@ function CoverLetterEditorContent() {
           </div>
           <div>
             <button 
-              onClick={() => window.print()}
-              className="hidden lg:flex px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.1)]"
+              onClick={handlePremiumDownload}
+              disabled={isProcessingDownload}
+              className={`hidden lg:flex px-4 py-2 text-white rounded-xl text-xs font-bold transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.1)] ${isProcessingDownload ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
             >
-              {t('clBtnExportPdf')}
+              {isProcessingDownload ? 'Vérification...' : t('clBtnExportPdf')}
             </button>
           </div>
         </div>
@@ -92,11 +163,11 @@ function CoverLetterEditorContent() {
           
           {currentStepIndex === steps.length - 1 ? (
             <Button 
-              onClick={() => {
-                saveLetter();
+              onClick={async () => {
                 setSaved(true);
+                await saveLetter();
                 // Navigation douce via Next.js router (pas de hard reload)
-                setTimeout(() => router.push('/dashboard'), 800);
+                setTimeout(() => router.push('/dashboard'), 500);
               }} 
               disabled={saved}
               className={`rounded-xl text-white shadow-sm hover:shadow-md transition-all px-6 ${

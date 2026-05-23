@@ -4,11 +4,13 @@ import { useResume } from '@/context/ResumeContext';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
+import { useAuth } from '@/context/AuthContext';
 
 export function SummaryStep() {
   const { t } = useLanguage();
   const { resumeData, updateSummary } = useResume();
   const { consumeToken } = useTokens();
+  const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -23,14 +25,31 @@ export function SummaryStep() {
     if (!success) return; // Si pas assez de jetons, la modale de recharge s'est ouverte automatiquement
 
     setIsGenerating(true);
-    // Simulation du délai d'appel API OpenAI
-    await new Promise(r => setTimeout(r, 2000));
     
-    // Génération fictive très qualitative basée sur le jobTitle
-    const mockAIResponse = `Professionnel passionné et dynamique avec une solide expérience en tant que ${resumeData.personalInfo.jobTitle}. Reconnu pour mon esprit d'analyse, ma rigueur et ma capacité à résoudre des problèmes complexes. Je suis activement à la recherche de nouveaux défis pour contribuer au succès d'une équipe ambitieuse et innovante.`;
-    
-    updateSummary(mockAIResponse);
-    setIsGenerating(false);
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt_type: 'summary',
+          context: { jobTitle: resumeData.personalInfo.jobTitle },
+          userId: user?.id || 'guest',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Erreur API');
+
+      const data = await response.json();
+      if (data.text) {
+        updateSummary(data.text);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Une erreur est survenue lors de la génération IA.');
+      // Optionnel : on pourrait re-créditer les jetons ici si ça échoue
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (

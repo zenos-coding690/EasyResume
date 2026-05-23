@@ -5,7 +5,7 @@ import { MapPin, Phone, Mail, Globe, Link } from 'lucide-react';
 
 export function ExecutiveTemplate() {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, references } = resumeData;
 
   // Séparation du texte en lignes pour les puces
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
@@ -161,6 +161,22 @@ export function ExecutiveTemplate() {
                      </span>
                    </div>
                    <div className="text-xs text-slate-500">{edu.school} {edu.city ? `| ${edu.city}` : ''}</div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         )}
+
+         {/* References */}
+         {references && references.length > 0 && (
+           <div className="mt-6">
+             <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wider border-b-2 border-slate-200 pb-1 mb-4">Références</h3>
+             <div className="space-y-4">
+               {references.map((ref) => (
+                 <div key={ref.id} className="break-inside-avoid">
+                   <div className="text-sm font-bold text-slate-900">{ref.name}</div>
+                   <div className="text-xs text-slate-600 italic font-medium">{ref.position} — {ref.company}</div>
+                   <div className="text-xs text-slate-500 mt-0.5">{ref.email} {ref.phone && `• ${ref.phone}`}</div>
                  </div>
                ))}
              </div>

@@ -4,12 +4,14 @@ import { useResume } from '@/context/ResumeContext';
 import { Plus, Trash2, Sparkles, Loader2, Briefcase, MapPin, Building2, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
+import { useAuth } from '@/context/AuthContext';
 import React from 'react';
 
 export function ExperienceStep() {
   const { t } = useLanguage();
   const { resumeData, addExperience, updateExperience, removeExperience } = useResume();
   const { consumeToken } = useTokens();
+  const { user } = useAuth();
   const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const handleAdd = () => {
@@ -34,13 +36,35 @@ export function ExperienceStep() {
     if (!success) return;
 
     setGeneratingId(expId);
-    await new Promise(r => setTimeout(r, 2000));
     
-    // Le prompt IA utiliserait : resumeData.personalInfo.jobTitle ET expTitle
-    const mockTasks = `• Pilotage et coordination des projets stratégiques en lien avec les objectifs.\n• Optimisation des processus internes, réduisant les délais de livraison de 15%.\n• Management d'une équipe de collaborateurs (recrutement, formation, évaluation).\n• Analyse des indicateurs de performance (KPI) et rédaction de reportings.`;
-    
-    updateExperience(expId, 'tasks', mockTasks);
-    setGeneratingId(null);
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt_type: 'experience',
+          context: { 
+            jobTitle: expTitle,
+            company: resumeData.experiences.find((e: any) => e.id === expId)?.company || 'une entreprise'
+          },
+          userId: user?.id || 'guest',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Erreur API');
+
+      const data = await response.json();
+      if (data.text) {
+        // Transformer en liste à puce si le LLM n'a pas mis les puces
+        const list = data.text.split('\n').map((line: string) => line.startsWith('•') ? line : `• ${line}`).join('\n');
+        updateExperience(expId, 'tasks', list);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Une erreur est survenue lors de la génération IA.');
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   return (

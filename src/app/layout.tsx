@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { TokenProvider } from "@/context/TokenContext";
 import { ResumeProvider } from "@/context/ResumeContext";
 import { CoverLetterProvider } from "@/context/CoverLetterContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -26,15 +27,17 @@ export default function RootLayout({
   return (
     <html lang="fr" className={cn("font-sans", plusJakartaSans.variable)}>
       <body className="antialiased">
-        <LanguageProvider>
-          <TokenProvider>
-            <ResumeProvider>
-              <CoverLetterProvider>
-                {children}
-              </CoverLetterProvider>
-            </ResumeProvider>
-          </TokenProvider>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <TokenProvider>
+              <ResumeProvider>
+                <CoverLetterProvider>
+                  {children}
+                </CoverLetterProvider>
+              </ResumeProvider>
+            </TokenProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

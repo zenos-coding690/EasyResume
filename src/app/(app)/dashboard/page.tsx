@@ -9,6 +9,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { useLanguage } from "@/context/LanguageContext";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 interface SavedItem {
   id: number;
@@ -30,11 +31,43 @@ export default function DashboardPage() {
   const [addDropdownOpen, setAddDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const rawResumes = localStorage.getItem('my_easy_resumes');
-    if (rawResumes) setSavedResumes(JSON.parse(rawResumes));
+    const fetchData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
 
-    const rawLetters = localStorage.getItem('my_easy_cover_letters');
-    if (rawLetters) setSavedLetters(JSON.parse(rawLetters));
+      const { data: resumesData, error: resumesError } = await supabase
+        .from('resumes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (!resumesError && resumesData) {
+        setSavedResumes(resumesData.map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          lastEdited: new Date(r.updated_at).toLocaleDateString(),
+          data: r.data,
+        })));
+      }
+
+      const { data: lettersData, error: lettersError } = await supabase
+        .from('cover_letters')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (!lettersError && lettersData) {
+        setSavedLetters(lettersData.map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          lastEdited: new Date(l.updated_at).toLocaleDateString(),
+          data: l.data,
+          company: l.data?.companyName,
+        })));
+      }
+    };
+
+    fetchData();
 
     const dl = localStorage.getItem('download_count');
     if (dl) setDownloadCount(parseInt(dl, 10));
@@ -50,34 +83,65 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleDeleteResume = (id: number | string) => {
-    const updated = savedResumes.filter(r => r.id !== id);
-    setSavedResumes(updated);
-    localStorage.setItem('my_easy_resumes', JSON.stringify(updated));
+  const handleDeleteResume = async (id: number | string) => {
+    await supabase.from('resumes').delete().eq('id', id);
+    setSavedResumes(prev => prev.filter(r => r.id !== id));
   };
 
-  const handleDuplicateResume = (id: number | string) => {
+  const handleDuplicateResume = async (id: number | string) => {
     const original = savedResumes.find(r => r.id === id);
     if (!original) return;
-    const dup = { ...original, id: Date.now(), title: `${original.title} (Copie)`, lastEdited: new Date().toLocaleDateString() };
-    const updated = [dup, ...savedResumes];
-    setSavedResumes(updated);
-    localStorage.setItem('my_easy_resumes', JSON.stringify(updated));
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
+    const newResume = {
+      user_id: session.user.id,
+      title: `${original.title} (Copie)`,
+      template_id: original.data?.templateId || 'pro-1',
+      data: original.data
+    };
+
+    const { data, error } = await supabase.from('resumes').insert(newResume).select().single();
+    if (!error && data) {
+      setSavedResumes([{
+        id: data.id,
+        title: data.title,
+        lastEdited: new Date(data.updated_at).toLocaleDateString(),
+        data: data.data,
+      }, ...savedResumes]);
+    }
   };
 
-  const handleDeleteLetter = (id: number | string) => {
-    const updated = savedLetters.filter(l => l.id !== id);
-    setSavedLetters(updated);
-    localStorage.setItem('my_easy_cover_letters', JSON.stringify(updated));
+  const handleDeleteLetter = async (id: number | string) => {
+    await supabase.from('cover_letters').delete().eq('id', id);
+    setSavedLetters(prev => prev.filter(l => l.id !== id));
   };
 
-  const handleDuplicateLetter = (id: number | string) => {
+  const handleDuplicateLetter = async (id: number | string) => {
     const original = savedLetters.find(l => l.id === id);
     if (!original) return;
-    const dup = { ...original, id: Date.now(), title: `${original.title} (Copie)`, lastEdited: new Date().toLocaleDateString() };
-    const updated = [dup, ...savedLetters];
-    setSavedLetters(updated);
-    localStorage.setItem('my_easy_cover_letters', JSON.stringify(updated));
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
+    const newLetter = {
+      user_id: session.user.id,
+      title: `${original.title} (Copie)`,
+      template_id: original.data?.templateId || 'cl-1',
+      data: original.data
+    };
+
+    const { data, error } = await supabase.from('cover_letters').insert(newLetter).select().single();
+    if (!error && data) {
+      setSavedLetters([{
+        id: data.id,
+        title: data.title,
+        lastEdited: new Date(data.updated_at).toLocaleDateString(),
+        data: data.data,
+        company: data.data?.companyName,
+      }, ...savedLetters]);
+    }
   };
 
   const resumesToDisplay = savedResumes;

@@ -21,7 +21,7 @@ export interface SidebarTheme {
 // =========================================================================
 export function ProTemplateSidebar({ theme }: { theme: SidebarTheme }) {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages, references } = resumeData;
 
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
   const hobbiesList = hobbies.split('\n').filter(h => h.trim() !== '');
@@ -223,6 +223,25 @@ export function ProTemplateSidebar({ theme }: { theme: SidebarTheme }) {
           </div>
         )}
         
+        {/* References */}
+        {references && references.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wider pb-1 mb-4" style={{ borderBottom: `2px solid ${theme.borderColor}` }}>
+              Références
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {references.map(ref => (
+                <div key={ref.id} className="relative pl-4 border-l-2 break-inside-avoid mb-2" style={{ borderColor: theme.borderColor }}>
+                  <div className="absolute w-2 h-2 bg-slate-400 rounded-full -left-[5px] top-1.5" />
+                  <div className="font-bold text-sm text-slate-800">{ref.name}</div>
+                  <div className="text-xs font-semibold text-slate-500">{ref.position} — {ref.company}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{ref.email} {ref.phone && `| ${ref.phone}`}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

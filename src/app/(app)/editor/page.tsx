@@ -9,18 +9,27 @@ import { SummaryStep } from '@/components/editor/steps/SummaryStep';
 import { ExperienceStep } from '@/components/editor/steps/ExperienceStep';
 import { EducationStep } from '@/components/editor/steps/EducationStep';
 import { SkillsStep } from '@/components/editor/steps/SkillsStep';
+import { ReferenceStep } from '@/components/editor/steps/ReferenceStep';
 import { Button } from '@/components/ui/button';
-import { Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useResume } from '@/context/ResumeContext';
-import { useSearchParams } from 'next/navigation';
+import { useTokens } from '@/context/TokenContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 function EditorContent() {
   const { t } = useLanguage();
   const { resumeData, saveResume, setTemplateId } = useResume();
+  const { downloadCredits, consumeDownloadCredit, openDownloadModal } = useTokens();
+  const router = useRouter();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isProcessingDownload, setIsProcessingDownload] = useState(false);
   const searchParams = useSearchParams();
+  const resumeId = searchParams.get('resume');
 
   // Écoute dynamique du modèle choisi dans l'URL (avec garde anti-boucle)
   useEffect(() => {
@@ -30,19 +39,102 @@ function EditorContent() {
     }
   }, [searchParams, setTemplateId, resumeData.templateId]);
 
+  // Vérification de l'état du déblocage (Délai de grâce)
+  useEffect(() => {
+    const checkUnlockStatus = async () => {
+      if (!resumeId) return;
+      const { data } = await supabase.from('resumes').select('unlocked_until').eq('id', resumeId).single();
+      if (data && data.unlocked_until) {
+        const unlockDate = new Date(data.unlocked_until);
+        if (unlockDate > new Date()) {
+          setIsUnlocked(true);
+        } else {
+          setIsUnlocked(false);
+        }
+      }
+    };
+    checkUnlockStatus();
+  }, [resumeId]);
+
+  // Déclenchement automatique de l'impression si le paramètre "print=1" est présent
+  useEffect(() => {
+    if (searchParams.get('print') === '1') {
+      // On déclenche la logique de téléchargement premium
+      handlePremiumDownload();
+    }
+  }, [searchParams]); // On ne l'exécute qu'une fois grâce au check URL param
+
+  const triggerPrint = () => {
+    setIsUnlocked(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const handlePremiumDownload = async () => {
+    if (!resumeId) {
+      alert("Veuillez d'abord 'Terminer & Sauvegarder' votre CV pour le télécharger.");
+      return;
+    }
+
+    if (isProcessingDownload) return;
+    setIsProcessingDownload(true);
+
+    try {
+      // Re-vérifier l'état en BDD pour être sûr
+      const { data } = await supabase.from('resumes').select('unlocked_until').eq('id', resumeId).single();
+      let hasGracePeriod = false;
+      if (data && data.unlocked_until) {
+        if (new Date(data.unlocked_until) > new Date()) hasGracePeriod = true;
+      }
+
+      if (hasGracePeriod) {
+        // Déjà débloqué, on imprime direct
+        triggerPrint();
+      } else {
+        // Pas de délai de grâce, il faut payer
+        if (downloadCredits > 0) {
+          const confirmUnlock = window.confirm(
+            "Télécharger ce CV en Haute Qualité (sans filigrane) coûte 1 crédit de téléchargement.\n\n" +
+            "Ce document restera déverrouillé pendant 15 minutes pour vous permettre d'apporter des corrections gratuitement.\n\n" +
+            `Solde actuel : ${downloadCredits} crédits.\n\nConfirmer ?`
+          );
+
+          if (confirmUnlock) {
+            const success = await consumeDownloadCredit(resumeId, 'resume');
+            if (success) {
+              triggerPrint();
+            } else {
+              alert("Erreur lors de l'utilisation du crédit.");
+            }
+          }
+        } else {
+          // Solde = 0
+          openDownloadModal();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Une erreur est survenue.");
+    } finally {
+      setIsProcessingDownload(false);
+    }
+  };
+
   const steps = [
     { title: t('editorStepPersonal'), component: <PersonalInfoStep /> },
     { title: t('editorStepSummary'), component: <SummaryStep /> },
     { title: t('editorStepExperience'), component: <ExperienceStep /> },
     { title: t('editorStepEducation'), component: <EducationStep /> },
     { title: t('editorStepSkills'), component: <SkillsStep /> },
+    { title: t('copiedSuccess') === 'Copié !' ? 'Références' : 'References', component: <ReferenceStep /> },
   ];
 
   const nextStep = () => setCurrentStepIndex(i => Math.min(i + 1, steps.length - 1));
   const prevStep = () => setCurrentStepIndex(i => Math.max(i - 1, 0));
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#E0EFFF]/30">
+    <div className={`flex h-screen w-full overflow-hidden bg-[#E0EFFF]/30 ${isUnlocked ? 'unlocked-print' : ''}`}>
       
       {/* LEFT PANE: Form Wizard */}
       <div className={`w-full lg:w-[45%] xl:w-[40%] flex flex-col h-full bg-white border-r border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 ${showMobilePreview ? 'hidden lg:flex' : 'flex'} print:hidden`}>
@@ -57,10 +149,11 @@ function EditorContent() {
            </div>
            <div>
              <button 
-               onClick={() => window.print()}
-               className="hidden lg:flex px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.1)]"
+               onClick={handlePremiumDownload}
+               disabled={isProcessingDownload}
+               className={`hidden lg:flex px-4 py-2 text-white rounded-xl text-xs font-bold transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.1)] ${isProcessingDownload ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800'}`}
              >
-               Exporter PDF
+               {isProcessingDownload ? 'Vérification...' : 'Exporter PDF'}
              </button>
            </div>
         </div>
@@ -92,13 +185,21 @@ function EditorContent() {
           
           {currentStepIndex === steps.length - 1 ? (
             <Button 
-              onClick={() => {
-                saveResume();
-                window.location.href = '/dashboard';
+              onClick={async () => {
+                setSaved(true);
+                await saveResume();
+                setTimeout(() => router.push('/dashboard'), 500);
               }} 
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all px-6"
+              disabled={saved}
+              className={`rounded-xl text-white shadow-sm hover:shadow-md transition-all px-6 ${
+                saved ? 'bg-emerald-500 cursor-default' : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
             >
-               <span className="hidden sm:inline">Terminer & Sauvegarder</span> <ChevronRight className="w-4 h-4 ml-2" />
+               {saved ? (
+                 <><CheckCircle2 className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Sauvegardé !</span></>
+               ) : (
+                 <><span className="hidden sm:inline">Terminer & Sauvegarder</span> <ChevronRight className="w-4 h-4 ml-2" /></>
+               )}
             </Button>
           ) : (
             <Button 

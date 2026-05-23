@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { ResumeData } from '@/context/ResumeContext';
+import { supabase } from '@/lib/supabase';
 
 // --- Structure de données de la lettre de motivation ---
 
@@ -83,7 +84,7 @@ interface CoverLetterContextType {
   setSignature: (dataUrl: string) => void;
   clearSignature: () => void;
   setTemplateId: (id: string) => void;
-  saveLetter: () => void;
+  saveLetter: () => Promise<void>;
   // Sélecteur de CV
   selectedResume: SavedResume | null;
   setSelectedResume: (resume: SavedResume | null) => void;
@@ -111,23 +112,28 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     setLetterData(prev => ({ ...prev, templateId: id }));
   };
 
-  const saveLetter = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const existing = localStorage.getItem('my_easy_cover_letters');
-        const letters = existing ? JSON.parse(existing) : [];
-        const newLetter = {
-          id: Date.now(),
-          title: letterData.subject || 'Lettre Sans Titre',
-          company: letterData.companyName,
-          lastEdited: new Date().toLocaleDateString(),
-          data: letterData,
-        };
-        letters.unshift(newLetter);
-        localStorage.setItem('my_easy_cover_letters', JSON.stringify(letters));
-      } catch (e) {
-        console.error('Error saving cover letter', e);
+  const saveLetter = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.error("User not logged in");
+        return;
       }
+
+      const { error } = await supabase.from('cover_letters').insert({
+        user_id: session.user.id,
+        title: letterData.subject || 'Lettre Sans Titre',
+        template_id: letterData.templateId,
+        data: letterData
+      });
+
+      if (error) {
+        console.error('Error saving cover letter to Supabase:', error);
+      } else {
+        console.log("Cover letter saved successfully!");
+      }
+    } catch (e) {
+      console.error('Error saving cover letter', e);
     }
   };
 

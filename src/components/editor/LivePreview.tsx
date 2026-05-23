@@ -13,7 +13,14 @@ export function LivePreview() {
         On utilise une technique CSS "transform scale" standard dans l'industrie 
         pour faire rentrer le format A4 (21cm x 29.7cm) de manière responsive dans le conteneur.
       */}
-      <div className="w-full h-full origin-top-left overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div className="w-full h-full origin-top-left overflow-y-auto overflow-x-hidden custom-scrollbar relative">
+         {/* GROS FILIGRANE MYEASYRESUME - UNIQUEMENT EN MODE IMPRESSION */}
+         <div className="hidden print:flex fixed inset-0 z-[9999] pointer-events-none items-center justify-center opacity-10 watermark-overlay">
+           <h1 className="text-[100px] sm:text-[140px] font-black text-slate-900 rotate-[-45deg] select-none whitespace-nowrap tracking-widest uppercase">
+             MyEasyResume
+           </h1>
+         </div>
+
          <TemplateRenderer />
       </div>
     </div>

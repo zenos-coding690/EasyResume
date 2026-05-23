@@ -6,7 +6,12 @@ import { CoverLetterRenderer } from './CoverLetterRenderer';
 export function CoverLetterPreview() {
   return (
     <div className="w-full max-w-[21cm] bg-white shadow-xl border border-slate-200 transition-all duration-300" style={{ aspectRatio: '1 / 1.414' }}>
-      <div className="w-full h-full origin-top-left overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div className="w-full h-full origin-top-left overflow-y-auto overflow-x-hidden custom-scrollbar relative">
+        <div className="hidden print:flex fixed inset-0 z-[9999] pointer-events-none items-center justify-center opacity-10 watermark-overlay">
+          <h1 className="text-[100px] sm:text-[140px] font-black text-slate-900 rotate-[-45deg] select-none whitespace-nowrap tracking-widest uppercase">
+            MyEasyResume
+          </h1>
+        </div>
         <CoverLetterRenderer />
       </div>
     </div>

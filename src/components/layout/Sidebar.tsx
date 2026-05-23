@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   User, 
@@ -14,12 +14,15 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTokens } from '@/context/TokenContext';
+import { useAuth } from '@/context/AuthContext';
 import { Sparkles } from 'lucide-react';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
   const { tokens, maxTokens, openModal } = useTokens();
+  const { logout } = useAuth();
 
   const navItems = [
     { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
@@ -32,9 +35,9 @@ export function Sidebar() {
 
   return (
     <div className="flex flex-col h-full bg-[#E0EFFF] text-[#1E293B] w-[260px] p-4 font-sans select-none">
-      <div className="flex items-center space-x-2 px-4 py-6 mb-4">
+      <Link href="/" className="flex items-center space-x-2 px-4 py-6 mb-4 hover:opacity-80 transition-opacity">
         <span className="text-[#1062FE] text-2xl font-bold tracking-tight">myeasyresume</span>
-      </div>
+      </Link>
 
       <nav className="flex-1 space-y-2">
         {navItems.map((item) => {
@@ -83,7 +86,13 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto">
-        <button className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-slate-600 hover:bg-white/50 hover:text-red-500 transition-all font-medium">
+        <button 
+          onClick={async () => {
+            await logout();
+            router.push('/login');
+          }}
+          className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-slate-600 hover:bg-white/50 hover:text-red-500 transition-all font-medium"
+        >
           <LogOut className="w-5 h-5" />
           <span>{t('logout')}</span>
         </button>

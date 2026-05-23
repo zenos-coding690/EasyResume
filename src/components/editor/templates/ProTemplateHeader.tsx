@@ -13,7 +13,7 @@ export interface HeaderTheme {
 
 export function ProTemplateHeader({ theme }: { theme: HeaderTheme }) {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages, references } = resumeData;
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
   const hobbiesList = hobbies.split('\n').filter(h => h.trim() !== '');
 
@@ -109,6 +109,20 @@ export function ProTemplateHeader({ theme }: { theme: HeaderTheme }) {
                   <div className="text-slate-500">{edu.school}</div>
                 </div>
               ))}
+            </div>
+          )}
+          {references && references.length > 0 && (
+            <div>
+              <h3 className="font-bold uppercase tracking-widest text-xs mb-3 px-2 py-1 rounded" style={{ backgroundColor: theme.sectionLabelBg, color: theme.sectionLabelText }}>Références</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {references.map(ref => (
+                  <div key={ref.id} className="break-inside-avoid">
+                    <div className="font-bold text-slate-900">{ref.name}</div>
+                    <div className="text-slate-500 font-medium italic">{ref.position} — {ref.company}</div>
+                    <div className="text-slate-500 mt-0.5">{ref.email} {ref.phone && `• ${ref.phone}`}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

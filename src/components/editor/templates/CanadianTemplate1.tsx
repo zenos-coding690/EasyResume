@@ -5,7 +5,7 @@ import { MapPin, Phone, Mail, Globe, Link } from 'lucide-react';
 
 export function CanadianTemplate1() {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, languages } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, languages, references } = resumeData;
 
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
 
@@ -134,22 +134,39 @@ export function CanadianTemplate1() {
         </div>
       )}
 
-      {/* Languages */}
-      {languages && languages.length > 0 && (
-        <div className="mb-8 break-inside-avoid">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 mb-3 border-b border-slate-200 pb-1">
-            Languages
-          </h3>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {languages.map((lang) => (
-              <div key={lang.id} className="text-sm text-slate-700">
-                <span className="font-bold text-slate-900">{lang.name}</span> — {getCanadianLangLevelLabel(lang.level)}
-              </div>
-            ))}
+        {/* Langues */}
+        {languages && languages.length > 0 && (
+          <div className="mb-6 break-inside-avoid">
+            <h3 className="text-sm font-bold uppercase tracking-widest border-b border-slate-300 pb-1 mb-3 text-slate-800">
+              Langues
+            </h3>
+            <ul className="space-y-1 text-xs text-slate-700">
+              {languages.map((lang) => (
+                <li key={lang.id}>
+                  <span className="font-semibold">{lang.name}</span> : <span className="text-slate-500">{lang.level}%</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
-  );
+        {/* References */}
+        {references && references.length > 0 && (
+          <div className="mb-6 break-inside-avoid">
+            <h3 className="text-sm font-bold uppercase tracking-widest border-b border-slate-300 pb-1 mb-3 text-slate-800">
+              Références
+            </h3>
+            <div className="space-y-3 text-xs">
+              {references.map(ref => (
+                <div key={ref.id} className="break-inside-avoid">
+                  <div className="font-bold text-slate-900">{ref.name}</div>
+                  <div className="text-slate-600 font-medium">{ref.position} — {ref.company}</div>
+                  <div className="text-slate-500 mt-0.5">{ref.email} {ref.phone && `• ${ref.phone}`}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
 }

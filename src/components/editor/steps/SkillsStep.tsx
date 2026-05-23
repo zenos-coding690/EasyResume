@@ -4,6 +4,7 @@ import { useResume } from '@/context/ResumeContext';
 import { Wrench, Heart, Globe, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
+import { useAuth } from '@/context/AuthContext';
 
 export function SkillsStep() {
   const { t } = useLanguage();
@@ -16,6 +17,7 @@ export function SkillsStep() {
     removeLanguage 
   } = useResume();
   const { consumeToken } = useTokens();
+  const { user } = useAuth();
 
   const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
   const [isGeneratingHobbies, setIsGeneratingHobbies] = useState(false);
@@ -31,25 +33,32 @@ export function SkillsStep() {
     if (!success) return;
 
     setIsGeneratingSkills(true);
-    await new Promise(r => setTimeout(r, 1500));
+    
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt_type: 'skills',
+          context: { jobTitle: resumeData.personalInfo.jobTitle },
+          userId: user?.id || 'guest',
+        }),
+      });
 
-    const job = resumeData.personalInfo.jobTitle.toLowerCase();
-    let suggestions = '';
+      if (!response.ok) throw new Error('Erreur API');
 
-    if (job.includes('dev') || job.includes('code') || job.includes('web') || job.includes('informatique')) {
-      suggestions = '• Développement d\'applications web et mobiles (Next.js, React)\n• Maîtrise de Git et des processus CI/CD\n• Travail en équipe avec la méthodologie Agile / Scrum\n• Conception et intégration d\'APIs REST & GraphQL\n• Veille technologique constante et résolution de bugs';
-    } else if (job.includes('design') || job.includes('graph') || job.includes('ux') || job.includes('ui')) {
-      suggestions = '• Conception d\'interfaces centrées utilisateur (UI/UX)\n• Prototypage et création de wireframes interactifs sur Figma\n• Création d\'identités visuelles et de chartes graphiques de marque\n• Retouche d\'image et design vectoriel (Suite Adobe)\n• Maîtrise du Responsive Design';
-    } else if (job.includes('marketing') || job.includes('vent') || job.includes('commercia')) {
-      suggestions = '• Stratégie d\'acquisition de leads et de conversion\n• Gestion et optimisation de campagnes publicitaires (Google Ads, Meta)\n• Utilisation et configuration de CRM professionnels (Hubspot, Salesforce)\n• Négociation commerciale B2B / B2C complexe\n• Analyse de données et reporting de performance mensuel';
-    } else if (job.includes('rh') || job.includes('ressources humaines') || job.includes('recrut')) {
-      suggestions = '• Pilotage intégral du cycle de recrutement et onboarding\n• Administration de la paie et gestion du personnel au quotidien\n• Développement de la marque employeur et attractivité des talents\n• Résolution de conflits et négociation collective\n• Accompagnement et animation de formations internes';
-    } else {
-      suggestions = `• Gestion de projet transversale et animation d'équipe\n• Excellentes capacités de communication écrite et interpersonnelle\n• Résolution autonome de problèmes complexes et esprit d'adaptation\n• Maîtrise des outils bureautiques et collaboratifs modernes\n• Analyse de données opérationnelles et synthèse de rapports`;
+      const data = await response.json();
+      if (data.text) {
+        // Le LLM peut répondre avec des virgules. Transformons cela en bullet points.
+        const list = data.text.split(',').map((s: string) => `• ${s.trim()}`).join('\n');
+        updateSkills(list);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Une erreur est survenue lors de la génération IA.');
+    } finally {
+      setIsGeneratingSkills(false);
     }
-
-    updateSkills(suggestions);
-    setIsGeneratingSkills(false);
   };
 
   const handleGenerateHobbies = async () => {
@@ -62,21 +71,30 @@ export function SkillsStep() {
     if (!success) return;
 
     setIsGeneratingHobbies(true);
-    await new Promise(r => setTimeout(r, 1500));
+    
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt_type: 'hobbies',
+          context: { jobTitle: resumeData.personalInfo.jobTitle },
+          userId: user?.id || 'guest',
+        }),
+      });
 
-    const job = resumeData.personalInfo.jobTitle.toLowerCase();
-    let suggestions = '';
+      if (!response.ok) throw new Error('Erreur API');
 
-    if (job.includes('dev') || job.includes('code') || job.includes('informatique')) {
-      suggestions = '• Participation active à des Hackathons et projets Open Source\n• Lecture d\'ouvrages de vulgarisation scientifique et de science-fiction\n• Pratique de la randonnée et course d\'orientation en montagne\n• Jeux de stratégie, d\'échecs et résolution d\'énigmes complexes';
-    } else if (job.includes('design') || job.includes('graph') || job.includes('art')) {
-      suggestions = '• Photographie d\'architecture et retouche créative\n• Dessin traditionnel, illustration numérique et peinture acrylique\n• Visites régulières de musées d\'art moderne et galeries créatives\n• Passionné de design d\'intérieur et de brocantes';
-    } else {
-      suggestions = '• Pratique régulière de la course à pied et de la natation en club\n• Passionné de littérature contemporaine et d\'essais sociologiques\n• Art culinaire, cuisine du monde et pâtisserie fine\n• Bénévolat actif au sein d\'associations caritatives locales';
+      const data = await response.json();
+      if (data.text) {
+        updateHobbies(data.text);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Une erreur est survenue lors de la génération IA.');
+    } finally {
+      setIsGeneratingHobbies(false);
     }
-
-    updateHobbies(suggestions);
-    setIsGeneratingHobbies(false);
   };
 
   const handleGenerateLanguages = async () => {

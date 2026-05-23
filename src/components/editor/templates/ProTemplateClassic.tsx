@@ -12,7 +12,7 @@ export interface ClassicTheme {
 
 export function ProTemplateClassic({ theme }: { theme: ClassicTheme }) {
   const { resumeData } = useResume();
-  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages } = resumeData;
+  const { personalInfo, professionalSummary, experiences, educations, skills, hobbies, languages, references } = resumeData;
   const skillsList = skills.split('\n').filter(s => s.trim() !== '');
   const hobbiesList = hobbies.split('\n').filter(h => h.trim() !== '');
 
@@ -105,6 +105,21 @@ export function ProTemplateClassic({ theme }: { theme: ClassicTheme }) {
         <div className="mt-6 break-inside-avoid">
           <h3 className="text-sm font-bold uppercase tracking-widest mb-2 pb-1" style={{ color: theme.accentColor, borderBottom: `1px solid ${theme.headingBorder}` }}>Centres d&apos;intérêt</h3>
           <div className="flex flex-wrap gap-2">{hobbiesList.map((h, i) => <span key={i} className="px-2 py-1 bg-slate-50 text-xs text-slate-600 rounded border border-slate-100">{h.replace(/^[•\-\*]\s*/, '')}</span>)}</div>
+        </div>
+      )}
+
+      {references && references.length > 0 && (
+        <div className="mt-6 break-inside-avoid">
+          <h3 className="text-sm font-bold uppercase tracking-widest mb-3 pb-1" style={{ color: theme.accentColor, borderBottom: `1px solid ${theme.headingBorder}` }}>Références</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {references.map(ref => (
+              <div key={ref.id} className="text-xs">
+                <div className="font-bold text-slate-800">{ref.name}</div>
+                <div className="text-slate-500 font-medium">{ref.position} <span className="font-normal">— {ref.company}</span></div>
+                <div className="text-slate-500 mt-0.5">{ref.email} {ref.phone && `• ${ref.phone}`}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

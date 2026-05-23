@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { supabase } from '@/lib/supabase';
 
 // --- Interfaces pour la structure de données du CV ---
 
@@ -22,6 +23,15 @@ export interface Education {
   city: string;
   startDate: string;
   endDate: string;
+}
+
+export interface Reference {
+  id: string;
+  name: string;
+  position: string;
+  company: string;
+  email: string;
+  phone: string;
 }
 
 export interface LanguageItem {
@@ -51,6 +61,7 @@ export interface ResumeData {
   skills: string;
   hobbies: string;
   languages: LanguageItem[];
+  references: Reference[];
   templateId: string;
 }
 
@@ -74,6 +85,7 @@ const initialResumeData: ResumeData = {
   skills: '',
   hobbies: '',
   languages: [],
+  references: [],
   templateId: 'pro-1'
 };
 
@@ -93,8 +105,11 @@ interface ResumeContextType {
   addLanguage: (lang: LanguageItem) => void;
   updateLanguage: (id: string, field: keyof LanguageItem, value: string | number) => void;
   removeLanguage: (id: string) => void;
+  addReference: (ref: Reference) => void;
+  updateReference: (id: string, field: keyof Reference, value: string) => void;
+  removeReference: (id: string) => void;
   setTemplateId: (id: string) => void;
-  saveResume: () => void;
+  saveResume: () => Promise<void>;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -164,27 +179,47 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResumeData(prev => ({ ...prev, languages: prev.languages.filter(lang => lang.id !== id) }));
   };
 
+  const addReference = (ref: Reference) => {
+    setResumeData(prev => ({ ...prev, references: [...(prev.references || []), ref] }));
+  };
+
+  const updateReference = (id: string, field: keyof Reference, value: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      references: (prev.references || []).map(ref => ref.id === id ? { ...ref, [field]: value } : ref)
+    }));
+  };
+
+  const removeReference = (id: string) => {
+    setResumeData(prev => ({ ...prev, references: (prev.references || []).filter(ref => ref.id !== id) }));
+  };
+
   const setTemplateId = (id: string) => {
     setResumeData(prev => ({ ...prev, templateId: id }));
   };
 
-  const saveResume = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const existing = localStorage.getItem('my_easy_resumes');
-        const resumes = existing ? JSON.parse(existing) : [];
-        const newResume = {
-          id: Date.now(),
-          title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
-          lastEdited: new Date().toLocaleDateString(),
-          thumbnail: resumeData.personalInfo.photoUrl || 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-          data: resumeData
-        };
-        resumes.unshift(newResume);
-        localStorage.setItem('my_easy_resumes', JSON.stringify(resumes));
-      } catch (e) {
-        console.error("Error saving resume", e);
+  const saveResume = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.error("User not logged in");
+        return;
       }
+      
+      const { error } = await supabase.from('resumes').insert({
+        user_id: session.user.id,
+        title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
+        template_id: resumeData.templateId,
+        data: resumeData
+      });
+
+      if (error) {
+        console.error("Error saving resume to Supabase:", error);
+      } else {
+        console.log("Resume saved successfully!");
+      }
+    } catch (e) {
+      console.error("Error saving resume", e);
     }
   };
 
@@ -196,6 +231,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       addEducation, updateEducation, removeEducation,
       updateSkills, updateHobbies, 
       addLanguage, updateLanguage, removeLanguage,
+      addReference, updateReference, removeReference,
       setTemplateId, saveResume
     }}>
       {children}
