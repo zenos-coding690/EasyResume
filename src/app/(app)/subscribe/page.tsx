@@ -8,19 +8,59 @@ import {
   Zap, 
   Award, 
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTokens } from "@/context/TokenContext";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export default function SubscribePage() {
   const { t } = useLanguage();
   const { openModal } = useTokens();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [purchasingPlan, setPurchasingPlan] = useState<number | null>(null);
+
+  const handleBuyPlan = async (packId: number, priceStr: string, features: { tokens: number, downloads: number }) => {
+    setPurchasingPlan(packId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        alert("Veuillez vous connecter pour acheter un forfait.");
+        setPurchasingPlan(null);
+        return;
+      }
+
+      const res = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packId: packId + 200, // Offset pour les forfaits complets
+          amount: priceStr,
+          tokens: features.tokens,
+          downloadCredits: features.downloads,
+          type: 'forfait',
+          email: session.user.email
+        })
+      });
+
+      const data = await res.json();
+      
+      if (res.ok && data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        alert("Erreur: " + (data.error || 'Inconnue'));
+        setPurchasingPlan(null);
+      }
+    } catch (err) {
+      alert("Erreur de connexion.");
+      setPurchasingPlan(null);
+    }
+  };
 
   const plans = [
     {
@@ -30,11 +70,11 @@ export default function SubscribePage() {
       popular: false,
       icon: Zap,
       features: [
-        t('plan1FeatDownload'),
-        t('plan1FeatAI'),
-        t('featPreviews'),
-        t('featSupport'),
-        t('featNoExpiry')
+        { text: t('plan1FeatDownload'), available: true, tokens: 0, downloads: 1 },
+        { text: t('plan1FeatAI'), available: false },
+        { text: t('featPreviews'), available: true },
+        { text: t('featSupport'), available: false },
+        { text: t('featNoExpiry'), available: false }
       ],
       color: "from-blue-50/50 to-indigo-50/50",
       btnClass: "bg-white text-slate-800 border-slate-200 hover:bg-slate-950 hover:text-white"
@@ -46,11 +86,11 @@ export default function SubscribePage() {
       popular: true,
       icon: Sparkles,
       features: [
-        t('plan2FeatDownload'),
-        t('plan2FeatAI'),
-        t('featPreviews'),
-        t('featSupport'),
-        t('featNoExpiry')
+        { text: t('plan2FeatDownload'), available: true, tokens: 0, downloads: 3 },
+        { text: t('plan2FeatAI'), available: false },
+        { text: t('featPreviews'), available: true },
+        { text: t('featSupport'), available: false },
+        { text: t('featNoExpiry'), available: false }
       ],
       color: "from-[#1062FE] to-indigo-700",
       btnClass: "bg-white text-[#1062FE] border-transparent hover:bg-slate-950 hover:text-white hover:shadow-lg"
@@ -62,11 +102,11 @@ export default function SubscribePage() {
       popular: false,
       icon: Award,
       features: [
-        t('plan3FeatDownload'),
-        t('plan3FeatAI'),
-        t('featPreviews'),
-        t('featSupport'),
-        t('featNoExpiry')
+        { text: t('plan3FeatDownload'), available: true, tokens: 0, downloads: 10 },
+        { text: t('plan3FeatAI'), available: false },
+        { text: t('featPreviews'), available: true },
+        { text: t('featSupport'), available: false },
+        { text: t('featNoExpiry'), available: false }
       ],
       color: "from-blue-50/50 to-indigo-50/50",
       btnClass: "bg-white text-slate-800 border-slate-200 hover:bg-slate-950 hover:text-white"
@@ -121,11 +161,10 @@ export default function SubscribePage() {
                   isSelected && "ring-2 ring-[#1062FE] ring-offset-2"
                 )}
               >
-                {/* Popular recommended badge & glowing circle for Plan 2 */}
                 {plan.popular && (
                   <>
                     <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-8 w-44 h-44 bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-                    <div className="absolute top-6 right-6 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-400/20 shadow-md">
+                    <div className="absolute top-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-400/20 shadow-md z-20">
                       {t('popularBadge')}
                     </div>
                   </>
@@ -133,7 +172,7 @@ export default function SubscribePage() {
 
                 {/* Card Top: Plan Name & Price */}
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3.5">
+                  <div className={cn("flex items-center space-x-3.5 relative z-10", plan.popular && "pr-24")}>
                     <div className={cn(
                       "p-3 rounded-2xl border flex items-center justify-center transition-colors",
                       plan.popular 
@@ -160,16 +199,20 @@ export default function SubscribePage() {
                   {/* Checklist features */}
                   <ul className="space-y-4 pt-2">
                     {plan.features.map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-center text-sm font-semibold tracking-tight">
+                      <li key={fIdx} className={cn("flex items-center text-sm font-semibold tracking-tight", !feature.available && "opacity-60")}>
                         <div className={cn(
                           "w-5 h-5 rounded-full flex items-center justify-center mr-3.5 flex-shrink-0 border",
-                          plan.popular 
-                            ? "bg-white/10 border-white/5 text-blue-400" 
-                            : "bg-blue-50 border-blue-100 text-[#1062FE]"
+                          feature.available
+                            ? (plan.popular ? "bg-white/10 border-white/5 text-blue-400" : "bg-blue-50 border-blue-100 text-[#1062FE]")
+                            : (plan.popular ? "bg-red-500/20 border-red-500/10 text-red-400" : "bg-red-50 border-red-100 text-red-500")
                         )}>
-                          <Check className="w-3 h-3" strokeWidth={3} />
+                          {feature.available ? <Check className="w-3 h-3" strokeWidth={3} /> : <X className="w-3 h-3" strokeWidth={3} />}
                         </div>
-                        <span className={cn(plan.popular ? "text-slate-200" : "text-slate-700")}>{feature}</span>
+                        <span className={cn(
+                          plan.popular 
+                            ? (feature.available ? "text-slate-200" : "text-slate-400") 
+                            : (feature.available ? "text-slate-700" : "text-slate-500 line-through")
+                        )}>{feature.text}</span>
                       </li>
                     ))}
                   </ul>
@@ -177,12 +220,21 @@ export default function SubscribePage() {
 
                 {/* Plan Action CTA Button */}
                 <div className="pt-8">
-                  <Button className={cn(
+                  <Button 
+                    disabled={purchasingPlan !== null}
+                    onClick={() => handleBuyPlan(plan.id, plan.price, { tokens: plan.features[0].tokens as number, downloads: plan.features[0].downloads as number })}
+                    className={cn(
                     "w-full rounded-xl py-3.5 text-xs font-extrabold uppercase tracking-widest border transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]",
                     plan.btnClass
                   )}>
-                    <span>{t('choosePlanBtn')}</span>
-                    <ChevronRight className="w-4 h-4" />
+                    {purchasingPlan === plan.id ? (
+                      <span>Patientez...</span>
+                    ) : (
+                      <>
+                        <span>{t('choosePlanBtn')}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
 

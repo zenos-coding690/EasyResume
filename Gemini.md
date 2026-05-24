@@ -41,53 +41,56 @@ L'application doit absolument conserver un aspect **SaaS Premium**. Aucune dévi
 ## ✅ 4. Fonctionnalités Déjà Implémentées
 
 ### A. Core, Sécurité & Layout
-- [x] **Système d'Authentification (`AuthContext`)** : Gestion de session simulée avec redirection sécurisée (`ProtectedRoute`). Les espaces d'édition et le dashboard sont inaccessibles sans compte.
+- [x] **Système d'Authentification (`AuthContext` + Supabase)** : Gestion de session sécurisée. Les espaces d'édition, le dashboard et les paiements sont inaccessibles sans compte.
+- [x] **Base de Données (PostgreSQL)** : Persistance des profils, CVs, Lettres, Jetons, Transactions et Feedbacks utilisateurs.
 - [x] **Traduction Temps Réel** : Bascule FR/EN via `LanguageContext` dans toute l'app.
-- [x] **Barre Latérale (Sidebar)** : Menu fluide incluant un **Tracker de Jetons IA réactif** en bas.
-- [x] **Système de Jetons IA** : `TokenContext` gère le solde. Possède une modale de recharge avec simulateurs de paiements locaux (Orange Money, MTN, Wave).
+- [x] **Barre Latérale (Sidebar)** : Menu fluide incluant un **Tracker de Jetons IA réactif**.
+- [x] **Système de Jetons IA et Paiements** : `TokenContext` synchronisé avec la BD. Intégration de l'API de paiement **Notch Pay** pour l'achat de recharges IA et de forfaits (Orange Money, MTN, Visa).
 
 ### B. Pages Publiques (Guest)
-- [x] **`/` (Landing Page)** : Vitrine magique et animée avec Sections Hero, "Comment ça marche", Services (Cartes interactives), FAQ, et Newsletter. Les Call-to-action s'adaptent intelligemment (Redirection vers `Login` ou `Dashboard`).
-- [x] **`/login` (Connexion/Inscription)** : Page de split-screen luxueuse. Validation rigoureuse du mot de passe (10 car. min, 1 maj, 1 min, 1 chiffre) et gestion de création de compte.
+- [x] **`/` (Landing Page)** : Vitrine magique et animée (Hero, "Comment ça marche", Services, FAQ). Redirection intelligente selon la session.
+- [x] **`/login` (Connexion/Inscription)** : Authentification via Supabase Auth. Validation rigoureuse et création de profil automatique dans la base de données.
 
 ### C. Pages Utilisateur Connecté (App)
-- [x] **`/dashboard`** : Tableau de bord principal (en attente de statistiques réelles).
-- [x] **`/profile` (Mon Profil)** : Layout à 3 colonnes. Formulaire d'édition inline dynamique, encadré d'affiliation avec copie-presse-papier animée.
-- [x] **`/settings` (Paramètres)** : 4 onglets interactifs. Inclut un **Indicateur de force de mot de passe dynamique** et une carte bancaire virtuelle (Subscription).
-- [x] **`/subscribe` (S'abonner)** : Grille de tarification cinématique à 3 cartes.
-- [x] **`/templates` (Modèles de CV)** : Galerie présentant 12 CV professionnels et 3 CV Canadiens (système de miniature dynamique).
-- [x] **`/cover-letter` (Lettres de motivation)** : Galerie de Lettres (1 Standard, 1 Canada, 1 Demande d'emploi).
-- [x] **`/editor` (Éditeur de CV)** : Interface à double volet (Formulaire interactif / Rendu en direct dynamique).
-- [x] **`/cover-letter-editor` (Éditeur de Lettres)** : Interface à double volet (Formulaire / Rendu en direct).
+- [x] **`/dashboard`** : Tableau de bord principal.
+- [x] **`/profile` (Mon Profil)** : Édition du profil avec sauvegarde en temps réel sur Supabase.
+- [x] **`/settings` (Paramètres)** : Sécurité, historique de facturation et préférences.
+- [x] **`/subscribe` (S'abonner)** : Grille de tarification. Achat de forfaits (Téléchargements uniquement) ou recharges de jetons IA via Notch Pay.
+- [x] **`/templates` & `/cover-letter`** : Galeries de modèles dynamiques.
+- [x] **`/editor` & `/cover-letter-editor`** : Éditeurs interactifs avec sauvegarde Supabase. **Prévisualisation mobile parfaite** grâce à un système de mise à l'échelle automatique (Scale) conservant le ratio A4.
+- [x] **Widget de Feedback** : Bouton flottant (mobile/desktop) permettant aux utilisateurs d'envoyer des retours ou signaler des bugs (sauvegardé en BD).
+
+### D. Panel Administrateur
+- [x] **Espace `/admin`** : Protégé par RLS (Row Level Security) réservé au rôle 'admin'.
+- [x] **Gestion des utilisateurs** : Vue sur les utilisateurs et les jetons restants.
+- [x] **`/admin/messages`** : Interface de consultation et de gestion des feedbacks utilisateurs.
 
 ---
 
 ## 📂 5. Structure des Fichiers Clés
 ```text
 /public
- └── /images/templates              # Images réelles des CV et Lettres
+ └── /images/templates              # Images des CV et Lettres
 /src
  ├── /app
- │    ├── /layout.tsx               # Enveloppé avec AuthProvider, Language, Token, Resume, CoverLetter
- │    ├── /page.tsx                 # Landing Page magique
- │    ├── /(auth)
- │    │    └── /login/page.tsx      # Page d'authentification (split-screen)
+ │    ├── /layout.tsx               # Enveloppé avec AuthProvider, Language, Token, etc.
+ │    ├── /api/payments             # Webhooks et initialisation Notch Pay
+ │    ├── /(auth)/login/page.tsx    # Page d'authentification
+ │    ├── /(admin)/admin/           # Dashboard Administrateur (Protégé)
  │    └── /(app)
- │         ├── /layout.tsx          # Enveloppé avec ProtectedRoute, Header et Sidebar
+ │         ├── /layout.tsx          # Enveloppé avec ProtectedRoute, inclut le FeedbackWidget
  │         ├── /editor/page.tsx     # Workspace CV
- │         ├── /cover-letter-editor/page.tsx
- │         └── ... (dashboard, profile, settings, templates)
+ │         └── ... (dashboard, profile, settings, subscribe)
  ├── /components
- │    ├── /landing                  # Navbar, HeroSection, HowItWorks, FeatureCards, FAQ, Footer...
- │    ├── /auth                     # ProtectedRoute
- │    ├── /layout                   # Sidebar, Header dynamique avec profil utilisateur
- │    └── /ui                       # Composants réutilisables (ScrollReveal, etc.)
+ │    ├── /admin                    # Composants de l'interface administrateur
+ │    ├── /editor                   # Formulaires et LivePreview (A4 scaling)
+ │    └── /layout                   # Sidebar, FeedbackWidget
  ├── /context
- │    ├── /AuthContext.tsx          # Gestionnaire de session et profil
- │    ├── /LanguageContext.tsx      # Dictionnaire Bilingue global
- │    ├── /TokenContext.tsx         # Gestionnaire des jetons IA
- │    ├── /ResumeContext.tsx        # État global du CV en cours
- │    └── /CoverLetterContext.tsx   # État global de la lettre en cours
+ │    ├── /AuthContext.tsx          # Connecté à Supabase Auth
+ │    ├── /TokenContext.tsx         # Gestionnaire paiements et soldes (Supabase)
+ │    └── /LanguageContext.tsx      # Traductions
+/supabase
+ └── /migrations                    # Scripts SQL (Auth, RLS, Fonctions RPC)
 ```
 
 ---
@@ -96,16 +99,16 @@ L'application doit absolument conserver un aspect **SaaS Premium**. Aucune dévi
 
 ### A. Reprise du contexte
 1. Relire attentivement ce fichier avant chaque session.
-2. Comprendre que **l'authentification est requise** pour toute création de document (`ProtectedRoute`).
-3. Conserver le même niveau de perfectionnement CSS Tailwind (effets de survol, transitions, `ScrollReveal`). Ne jamais régresser vers un style basique.
+2. Comprendre que **l'authentification et Supabase sont au cœur du système**. Les données ne sont plus simulées, elles viennent de la base de données.
+3. Toujours vérifier les permissions RLS (Row Level Security) avant d'ajouter de nouvelles requêtes.
+4. Conserver le même niveau de perfectionnement CSS Tailwind (effets de survol, transitions, `ScrollReveal`).
 
 ### B. Feuille de route (Roadmap)
 Les prochaines étapes à développer sont :
 1. **L'Éditeur de Conception Assistée (Polishing)** :
-   - Terminer la liaison entre les formulaires des éditeurs et le rendu dynamique en temps réel si des ajustements sont nécessaires.
-2. **Le Dashboard (Tableau de Bord)** :
-   - Remplir la page `/dashboard` avec des métriques réelles depuis l'historique utilisateur (jetons restants, CV récents, taux de complétion).
-3. **Le Backend / Base de Données** :
-   - Connecter ces interfaces à Supabase / PostgreSQL.
-   - Remplacer la logique simulée de `AuthContext.tsx` par l'authentification Supabase.
-   - Migrer les états globaux React (`ResumeContext`, etc.) vers la base de données pour une sauvegarde persistante dans le cloud.
+   - Perfectionner la génération de contenu par l'IA (Prompts) en consommant les jetons.
+2. **Le Dashboard Utilisateur** :
+   - Afficher les vraies statistiques depuis l'historique utilisateur Supabase (CV récents, documents créés).
+3. **Amélioration du Panel Admin** :
+   - Ajouter des statistiques de revenus (Notch Pay).
+   - Possibilité de répondre directement aux messages de feedback par email.

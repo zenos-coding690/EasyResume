@@ -33,8 +33,21 @@ export async function POST(req: Request) {
       const downloadsToAdd = parts.length > 4 ? parseInt(parts[4], 10) : 0;
       const amountPaid = data.transaction.amount;
 
-      if (downloadsToAdd > 0) {
-        // Créditer les téléchargements
+      if (downloadsToAdd > 0 && tokensToAdd > 0) {
+        // Forfait complet (créditer les téléchargements ET les jetons)
+        const { data: dData, error: dError } = await supabase.rpc('credit_downloads', {
+          p_user_id: userId, p_credits: downloadsToAdd, p_tx_ref: reference + '_dl', p_amount: amountPaid
+        });
+        const { data: tData, error: tError } = await supabase.rpc('credit_tokens', {
+          p_user_id: userId, p_tokens: tokensToAdd, p_tx_ref: reference + '_tk', p_amount: 0
+        });
+
+        if (dError || tError) return NextResponse.json({ error: 'Erreur d\'attribution du forfait.' }, { status: 500 });
+        if (dData === false || tData === false) return NextResponse.json({ success: true, message: 'Déjà traité' });
+
+        return NextResponse.json({ success: true, tokens: tokensToAdd, downloadCredits: downloadsToAdd });
+      } else if (downloadsToAdd > 0) {
+        // Créditer uniquement les téléchargements
         const { data: rpcData, error: rpcError } = await supabase.rpc('credit_downloads', {
           p_user_id: userId,
           p_credits: downloadsToAdd,
@@ -47,7 +60,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, downloadCredits: downloadsToAdd });
       } else {
-        // Créditer les jetons IA
+        // Créditer uniquement les jetons IA
         const { data: rpcData, error: rpcError } = await supabase.rpc('credit_tokens', {
           p_user_id: userId,
           p_tokens: tokensToAdd,

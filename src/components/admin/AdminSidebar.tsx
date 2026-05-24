@@ -8,7 +8,8 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -20,6 +21,7 @@ export function AdminSidebar() {
     { name: 'Tableau de bord', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Utilisateurs', href: '/admin/users', icon: Users },
     { name: 'Comptabilité', href: '/admin/transactions', icon: CreditCard },
+    { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
   ];
 
   return (

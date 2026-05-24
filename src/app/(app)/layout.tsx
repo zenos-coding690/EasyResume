@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { FeedbackWidget } from "@/components/layout/FeedbackWidget";
 
 export default function AppLayout({
   children,
@@ -22,6 +23,7 @@ export default function AppLayout({
           </main>
         </div>
       </div>
+      <FeedbackWidget />
     </div>
   );
 }
