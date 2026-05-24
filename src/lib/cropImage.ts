@@ -36,8 +36,18 @@ export async function getCroppedImg(
     return null
   }
 
-  croppedCanvas.width = pixelCrop.width
-  croppedCanvas.height = pixelCrop.height
+  const MAX_SIZE = 400;
+  let finalWidth = pixelCrop.width;
+  let finalHeight = pixelCrop.height;
+
+  if (finalWidth > MAX_SIZE || finalHeight > MAX_SIZE) {
+    const ratio = Math.min(MAX_SIZE / finalWidth, MAX_SIZE / finalHeight);
+    finalWidth = Math.round(finalWidth * ratio);
+    finalHeight = Math.round(finalHeight * ratio);
+  }
+
+  croppedCanvas.width = finalWidth;
+  croppedCanvas.height = finalHeight;
 
   croppedCtx.drawImage(
     canvas,
@@ -47,17 +57,16 @@ export async function getCroppedImg(
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
-  )
+    finalWidth,
+    finalHeight
+  );
 
   return new Promise((resolve, reject) => {
-    croppedCanvas.toBlob((file) => {
-      if (file) {
-        resolve(URL.createObjectURL(file))
-      } else {
-        reject(new Error('Canvas is empty'))
-      }
-    }, 'image/png')
-  })
+    const dataUrl = croppedCanvas.toDataURL('image/jpeg', 0.8);
+    if (dataUrl && dataUrl !== 'data:,') {
+      resolve(dataUrl);
+    } else {
+      reject(new Error('Canvas is empty'));
+    }
+  });
 }

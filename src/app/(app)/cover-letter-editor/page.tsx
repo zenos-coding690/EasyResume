@@ -165,7 +165,7 @@ function CoverLetterEditorContent() {
             <Button 
               onClick={async () => {
                 setSaved(true);
-                await saveLetter();
+                await saveLetter(letterId);
                 // Navigation douce via Next.js router (pas de hard reload)
                 setTimeout(() => router.push('/dashboard'), 500);
               }} 

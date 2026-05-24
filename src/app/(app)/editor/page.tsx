@@ -187,7 +187,7 @@ function EditorContent() {
             <Button 
               onClick={async () => {
                 setSaved(true);
-                await saveResume();
+                await saveResume(resumeId);
                 setTimeout(() => router.push('/dashboard'), 500);
               }} 
               disabled={saved}

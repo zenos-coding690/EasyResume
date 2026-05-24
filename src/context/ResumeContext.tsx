@@ -109,7 +109,7 @@ interface ResumeContextType {
   updateReference: (id: string, field: keyof Reference, value: string) => void;
   removeReference: (id: string) => void;
   setTemplateId: (id: string) => void;
-  saveResume: () => Promise<void>;
+  saveResume: (resumeId?: string | null) => Promise<void>;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -198,7 +198,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResumeData(prev => ({ ...prev, templateId: id }));
   };
 
-  const saveResume = async () => {
+  const saveResume = async (resumeId?: string | null) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
@@ -206,17 +206,26 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      const { error } = await supabase.from('resumes').insert({
-        user_id: session.user.id,
-        title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
-        template_id: resumeData.templateId,
-        data: resumeData
-      });
-
-      if (error) {
-        console.error("Error saving resume to Supabase:", error);
+      if (resumeId) {
+        const { error } = await supabase.from('resumes').update({
+          title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
+          template_id: resumeData.templateId,
+          data: resumeData,
+          updated_at: new Date().toISOString()
+        }).eq('id', resumeId).eq('user_id', session.user.id);
+        
+        if (error) console.error("Error updating resume:", error);
+        else console.log("Resume updated successfully!");
       } else {
-        console.log("Resume saved successfully!");
+        const { error } = await supabase.from('resumes').insert({
+          user_id: session.user.id,
+          title: resumeData.personalInfo.jobTitle || 'CV Sans Titre',
+          template_id: resumeData.templateId,
+          data: resumeData
+        });
+
+        if (error) console.error("Error saving resume to Supabase:", error);
+        else console.log("Resume saved successfully!");
       }
     } catch (e) {
       console.error("Error saving resume", e);

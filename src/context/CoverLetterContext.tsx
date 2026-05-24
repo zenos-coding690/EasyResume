@@ -84,7 +84,7 @@ interface CoverLetterContextType {
   setSignature: (dataUrl: string) => void;
   clearSignature: () => void;
   setTemplateId: (id: string) => void;
-  saveLetter: () => Promise<void>;
+  saveLetter: (letterId?: string | null) => Promise<void>;
   // Sélecteur de CV
   selectedResume: SavedResume | null;
   setSelectedResume: (resume: SavedResume | null) => void;
@@ -112,7 +112,7 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
     setLetterData(prev => ({ ...prev, templateId: id }));
   };
 
-  const saveLetter = async () => {
+  const saveLetter = async (letterId?: string | null) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
@@ -120,17 +120,26 @@ export function CoverLetterProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { error } = await supabase.from('cover_letters').insert({
-        user_id: session.user.id,
-        title: letterData.subject || 'Lettre Sans Titre',
-        template_id: letterData.templateId,
-        data: letterData
-      });
-
-      if (error) {
-        console.error('Error saving cover letter to Supabase:', error);
+      if (letterId) {
+        const { error } = await supabase.from('cover_letters').update({
+          title: letterData.subject || 'Lettre Sans Titre',
+          template_id: letterData.templateId,
+          data: letterData,
+          updated_at: new Date().toISOString()
+        }).eq('id', letterId).eq('user_id', session.user.id);
+        
+        if (error) console.error('Error updating cover letter:', error);
+        else console.log("Cover letter updated successfully!");
       } else {
-        console.log("Cover letter saved successfully!");
+        const { error } = await supabase.from('cover_letters').insert({
+          user_id: session.user.id,
+          title: letterData.subject || 'Lettre Sans Titre',
+          template_id: letterData.templateId,
+          data: letterData
+        });
+
+        if (error) console.error('Error saving cover letter to Supabase:', error);
+        else console.log("Cover letter saved successfully!");
       }
     } catch (e) {
       console.error('Error saving cover letter', e);
