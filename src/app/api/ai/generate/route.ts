@@ -12,8 +12,21 @@ export async function POST(req: Request) {
 
     const { prompt_type, context, userId } = await req.json();
 
-    if (!prompt_type || !userId) {
+    if (!prompt_type) {
       return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 });
+    }
+
+    // Sécurisation critique : Vérifier que l'utilisateur est bien connecté via son token JWT
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Non autorisé. Jeton manquant.' }, { status: 401 });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Non autorisé. Session invalide.' }, { status: 401 });
     }
 
     // Ensure API key is available

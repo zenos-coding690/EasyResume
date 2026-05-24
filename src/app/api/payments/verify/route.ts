@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase'; // Important: we use the frontend client, but we must manually pass auth headers if needed, OR we just let the RPC use the user id passed from frontend? Wait, API Routes in App Router don't share cookies unless we use `@supabase/ssr`. Since we can't easily read cookies without the helpers, we will trust the frontend's session ID and the Notch Pay verification status.
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +13,10 @@ export async function POST(req: Request) {
     if (!reference || !userId) {
       return NextResponse.json({ error: 'Référence ou UserId manquant.' }, { status: 400 });
     }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // 1. Vérifier le statut du paiement auprès de Notch Pay
     const response = await fetch(`https://api.notchpay.co/payments/${reference}`, {
@@ -35,10 +39,10 @@ export async function POST(req: Request) {
 
       if (downloadsToAdd > 0 && tokensToAdd > 0) {
         // Forfait complet (créditer les téléchargements ET les jetons)
-        const { data: dData, error: dError } = await supabase.rpc('credit_downloads', {
+        const { data: dData, error: dError } = await supabaseAdmin.rpc('credit_downloads', {
           p_user_id: userId, p_credits: downloadsToAdd, p_tx_ref: reference + '_dl', p_amount: amountPaid
         });
-        const { data: tData, error: tError } = await supabase.rpc('credit_tokens', {
+        const { data: tData, error: tError } = await supabaseAdmin.rpc('credit_tokens', {
           p_user_id: userId, p_tokens: tokensToAdd, p_tx_ref: reference + '_tk', p_amount: 0
         });
 
@@ -48,7 +52,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, tokens: tokensToAdd, downloadCredits: downloadsToAdd });
       } else if (downloadsToAdd > 0) {
         // Créditer uniquement les téléchargements
-        const { data: rpcData, error: rpcError } = await supabase.rpc('credit_downloads', {
+        const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('credit_downloads', {
           p_user_id: userId,
           p_credits: downloadsToAdd,
           p_tx_ref: reference,
@@ -61,7 +65,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, downloadCredits: downloadsToAdd });
       } else {
         // Créditer uniquement les jetons IA
-        const { data: rpcData, error: rpcError } = await supabase.rpc('credit_tokens', {
+        const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('credit_tokens', {
           p_user_id: userId,
           p_tokens: tokensToAdd,
           p_tx_ref: reference,

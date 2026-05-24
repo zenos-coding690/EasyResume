@@ -5,6 +5,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export function SummaryStep() {
   const { t } = useLanguage();
@@ -27,9 +28,14 @@ export function SummaryStep() {
     setIsGenerating(true);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           prompt_type: 'summary',
           context: { jobTitle: resumeData.personalInfo.jobTitle },

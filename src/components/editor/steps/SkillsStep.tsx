@@ -5,6 +5,7 @@ import { Wrench, Heart, Globe, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export function SkillsStep() {
   const { t } = useLanguage();
@@ -35,9 +36,14 @@ export function SkillsStep() {
     setIsGeneratingSkills(true);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           prompt_type: 'skills',
           context: { jobTitle: resumeData.personalInfo.jobTitle },
@@ -73,9 +79,14 @@ export function SkillsStep() {
     setIsGeneratingHobbies(true);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           prompt_type: 'hobbies',
           context: { jobTitle: resumeData.personalInfo.jobTitle },

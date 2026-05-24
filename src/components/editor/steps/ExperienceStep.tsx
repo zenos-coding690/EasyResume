@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { useAuth } from '@/context/AuthContext';
 import React from 'react';
+import { supabase } from '@/lib/supabase';
 
 export function ExperienceStep() {
   const { t } = useLanguage();
@@ -38,9 +39,14 @@ export function ExperienceStep() {
     setGeneratingId(expId);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           prompt_type: 'experience',
           context: { 
