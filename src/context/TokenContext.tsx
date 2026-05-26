@@ -284,8 +284,8 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       {/* WELCOME POPUP — FIRST VISIT ONLY                               */}
       {/* ============================================================== */}
       {isWelcomeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn">
-          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-8 max-w-md w-full mx-4 shadow-2xl relative overflow-hidden animate-slideUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn p-4">
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-slideUp max-h-[90vh] overflow-y-auto overflow-x-hidden">
             {/* Background glow */}
             <div className="absolute -top-16 -right-16 w-56 h-56 bg-blue-500/8 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/6 rounded-full blur-2xl pointer-events-none" />
@@ -337,9 +337,9 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       {/* GLOBAL RECHARGE MODAL OVERLAY                                  */}
       {/* ============================================================== */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn p-4">
           
-          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-2xl relative overflow-hidden animate-slideUp">
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[90vh] overflow-y-auto overflow-x-hidden">
             
             {/* Background design elements */}
             <div className="absolute top-0 right-0 transform translate-x-20 -translate-y-12 w-64 h-64 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -465,9 +465,9 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       {/* DOWNLOAD MODAL OVERLAY                                         */}
       {/* ============================================================== */}
       {isDownloadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn p-4">
           
-          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-2xl relative overflow-hidden animate-slideUp">
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[90vh] overflow-y-auto overflow-x-hidden">
             
             <div className="absolute top-0 right-0 transform translate-x-20 -translate-y-12 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
             
