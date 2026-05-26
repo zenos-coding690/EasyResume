@@ -408,6 +408,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const savedLang = localStorage.getItem('language') as Language;
     if (savedLang === 'fr' || savedLang === 'en') {
       setLanguageState(savedLang);
+    } else if (typeof navigator !== 'undefined') {
+      // Auto-detect browser language
+      const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+      if (browserLang && browserLang.toLowerCase().startsWith('en')) {
+        setLanguageState('en');
+      } else {
+        setLanguageState('fr');
+      }
     }
   }, []);
 
