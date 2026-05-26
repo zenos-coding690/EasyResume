@@ -339,7 +339,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn p-4">
           
-          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-4 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[95vh] overflow-y-auto overflow-x-hidden">
             
             {/* Background design elements */}
             <div className="absolute top-0 right-0 transform translate-x-20 -translate-y-12 w-64 h-64 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -348,28 +348,28 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
             <button 
               onClick={closeModal}
               disabled={purchasingPack !== null}
-              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-700 transition-all active:scale-95"
+              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-700 transition-all active:scale-95 z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Modal Header */}
-            <div className="flex items-start space-x-4 mb-6">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-[#1062FE]">
-                <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="flex items-start space-x-3 mb-5 pr-8">
+              <div className="p-2 sm:p-3 bg-blue-50 border border-blue-100 rounded-xl sm:rounded-2xl text-[#1062FE]">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight leading-tight">
                   {t('copiedSuccess') === 'Copié !' ? "Recharger mes jetons IA" : "Refill AI Tokens"}
                 </h3>
-                <p className="text-slate-400 text-xs font-semibold uppercase mt-0.5 tracking-wider">
+                <p className="text-slate-400 text-[10px] sm:text-xs font-semibold uppercase mt-0.5 tracking-wider">
                   {t('copiedSuccess') === 'Copié !' ? "Boostez vos rédactions assistées par l'IA" : "Boost your AI assistant writing power"}
                 </p>
               </div>
             </div>
 
             {/* Packs Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-3 sm:gap-4 mb-5 pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {packs.map((pack) => {
                 const Icon = pack.icon;
                 const isPurchasing = purchasingPack === pack.id;
@@ -378,9 +378,9 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
                 return (
                   <div
                     key={pack.id}
-                    className={`rounded-2xl p-4 border transition-all duration-300 relative flex flex-col justify-between ${
+                    className={`rounded-2xl p-3.5 sm:p-4 border transition-all duration-300 relative flex flex-col justify-between flex-shrink-0 w-[80%] sm:w-[260px] md:w-auto snap-center ${
                       pack.popular 
-                        ? 'border-[#1062FE] bg-blue-50/10 shadow-md scale-[1.01]' 
+                        ? 'border-[#1062FE] bg-blue-50/10 shadow-md scale-[1.02] md:scale-[1.01]' 
                         : 'border-slate-100 bg-white hover:border-slate-200'
                     }`}
                   >
@@ -443,8 +443,8 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Local Payment Gateways simulator */}
-            <div className="bg-slate-50 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-100">
-              <div className="flex items-center space-x-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-slate-100">
+              <div className="flex items-center space-x-2 text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                 <CreditCard className="w-4 h-4 text-slate-400" />
                 <span>Modes de paiement sécurisés</span>
               </div>
@@ -467,33 +467,33 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       {isDownloadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm select-none animate-fadeIn p-4">
           
-          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-5 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 p-4 sm:p-8 max-w-2xl w-full shadow-2xl relative animate-slideUp max-h-[95vh] overflow-y-auto overflow-x-hidden">
             
             <div className="absolute top-0 right-0 transform translate-x-20 -translate-y-12 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
             
             <button 
               onClick={closeDownloadModal}
               disabled={purchasingPack !== null}
-              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-700 transition-all active:scale-95"
+              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-700 transition-all active:scale-95 z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-start space-x-4 mb-6">
-              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-500">
-                <Check className="w-6 h-6 animate-pulse" />
+            <div className="flex items-start space-x-3 mb-5 pr-8">
+              <div className="p-2 sm:p-3 bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl text-emerald-500">
+                <Check className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight leading-tight">
                   Acheter des Téléchargements
                 </h3>
-                <p className="text-slate-400 text-xs font-semibold uppercase mt-0.5 tracking-wider">
+                <p className="text-slate-400 text-[10px] sm:text-xs font-semibold uppercase mt-0.5 tracking-wider">
                   Exportez votre CV sans filigrane (Délai de 15min)
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-3 sm:gap-4 mb-5 pb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {downloadPacks.map((pack) => {
                 const Icon = pack.icon;
                 const isPurchasing = purchasingPack === pack.id + 100;
@@ -502,9 +502,9 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
                 return (
                   <div
                     key={pack.id}
-                    className={`rounded-2xl p-4 border transition-all duration-300 relative flex flex-col justify-between ${
+                    className={`rounded-2xl p-3.5 sm:p-4 border transition-all duration-300 relative flex flex-col justify-between flex-shrink-0 w-[80%] sm:w-[260px] md:w-auto snap-center ${
                       pack.popular 
-                        ? 'border-emerald-500 bg-emerald-50/10 shadow-md scale-[1.01]' 
+                        ? 'border-emerald-500 bg-emerald-50/10 shadow-md scale-[1.02] md:scale-[1.01]' 
                         : 'border-slate-100 bg-white hover:border-slate-200'
                     }`}
                   >
@@ -566,8 +566,8 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
               })}
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-100">
-              <div className="flex items-center space-x-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-slate-100">
+              <div className="flex items-center space-x-2 text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                 <CreditCard className="w-4 h-4 text-slate-400" />
                 <span>Paiements sécurisés (Notch Pay)</span>
               </div>
