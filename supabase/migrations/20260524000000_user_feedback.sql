@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.user_feedbacks (
 ALTER TABLE public.user_feedbacks ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can insert their own feedbacks
+DROP POLICY IF EXISTS "Users can insert their own feedbacks" ON public.user_feedbacks;
 CREATE POLICY "Users can insert their own feedbacks" 
 ON public.user_feedbacks 
 FOR INSERT 
@@ -18,6 +19,7 @@ TO authenticated
 WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Admin can read all feedbacks
+DROP POLICY IF EXISTS "Admin can view all feedbacks" ON public.user_feedbacks;
 CREATE POLICY "Admin can view all feedbacks" 
 ON public.user_feedbacks 
 FOR SELECT 
@@ -25,6 +27,7 @@ TO authenticated
 USING (public.is_admin(auth.uid()));
 
 -- Policy: Admin can update (mark as read) feedbacks
+DROP POLICY IF EXISTS "Admin can update feedbacks" ON public.user_feedbacks;
 CREATE POLICY "Admin can update feedbacks" 
 ON public.user_feedbacks 
 FOR UPDATE 

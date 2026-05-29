@@ -34,8 +34,8 @@ const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
 export function TokenProvider({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
-  const [tokens, setTokens] = useState<number>(20);
-  const [maxTokens, setMaxTokens] = useState<number>(20);
+  const [tokens, setTokens] = useState<number>(60);
+  const [maxTokens, setMaxTokens] = useState<number>(60);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(false);
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null);
@@ -63,8 +63,8 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
         }
       } else if (error?.code === 'PGRST116') {
         // Si l'utilisateur a été créé avant l'ajout du trigger DB, on initialise sa ligne manuellement
-        await supabase.from('user_tokens').insert({ id: session.user.id, balance: 20 });
-        setTokens(20);
+        await supabase.from('user_tokens').insert({ id: session.user.id, balance: 60 });
+        setTokens(60);
       }
 
       if (!localStorage.getItem('has_welcomed')) {
@@ -308,7 +308,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
             {/* Feature list */}
             <div className="space-y-3 mb-7 relative z-10">
               {[
-                t('copiedSuccess') === 'Copié !' ? '20 jetons IA offerts pour démarrer' : '20 free AI tokens to get started',
+                t('copiedSuccess') === 'Copié !' ? '60 jetons IA offerts pour démarrer' : '60 free AI tokens to get started',
                 t('copiedSuccess') === 'Copié !' ? 'Accès à tous les modèles premium' : 'Access to all premium templates',
                 t('copiedSuccess') === 'Copié !' ? 'Prévisualisation illimitée' : 'Unlimited preview',
               ].map((feat) => (
