@@ -37,8 +37,9 @@ export async function POST(req: Request) {
     // Définir le prompt en fonction du type de requête
     switch (prompt_type) {
       case 'summary':
-        prompt = `Rédige un profil professionnel très percutant (environ 3-4 phrases) pour un CV de ${context.jobTitle}. 
-        Ne mets pas de titre, écris directement le paragraphe. Il doit être écrit à la première personne et mettre en avant dynamisme et compétences.`;
+        prompt = `Rédige un profil professionnel très percutant pour un CV de ${context.jobTitle}. 
+        Ne mets pas de titre, écris directement le paragraphe. Il doit être écrit à la première personne et mettre en avant dynamisme et compétences.
+        IMPORTANT : Le résumé doit être concis et faire un MAXIMUM STRICT de 65 mots.`;
         break;
 
       case 'experience':

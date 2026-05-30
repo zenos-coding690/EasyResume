@@ -251,7 +251,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       id: 1,
       name: "Pack Basique",
       credits: 1,
-      price: "900 XAF",
+      price: "800 XAF",
       desc: "1 Téléchargement PDF",
       icon: Zap,
       popular: false
