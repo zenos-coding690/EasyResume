@@ -31,7 +31,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 group">
+          <Link href={user ? "/templates" : "/"} className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-lg bg-[#1062FE] flex items-center justify-center transition-transform group-hover:scale-105">
               <FileText className="w-5 h-5 text-white" />
             </div>
@@ -62,10 +62,10 @@ export default function Navbar() {
               </>
             ) : (
               <Button 
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/templates')}
                 className="bg-[#1062FE] hover:bg-blue-700 text-white rounded-full px-6 font-semibold transition-transform hover:scale-105"
               >
-                Mon Tableau de Bord
+                Mon Espace
               </Button>
             )}
           </div>
@@ -97,8 +97,8 @@ export default function Navbar() {
               </Link>
             </>
           ) : (
-            <Link href="/dashboard" className="block w-full">
-              <Button className="w-full justify-center bg-[#1062FE] text-white">Mon Tableau de Bord</Button>
+            <Link href="/templates" className="block w-full">
+              <Button className="w-full justify-center bg-[#1062FE] text-white">Mon Espace</Button>
             </Link>
           )}
         </div>

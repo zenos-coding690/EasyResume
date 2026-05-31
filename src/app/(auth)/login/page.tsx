@@ -65,7 +65,7 @@ export default function LoginPage() {
           return;
         }
         
-        router.push('/dashboard');
+        router.push('/templates');
       } else {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -85,7 +85,7 @@ export default function LoginPage() {
         }
         
         // Since email confirmation is disabled, user is logged in automatically
-        router.push('/dashboard');
+        router.push('/templates');
       }
     } catch (err: any) {
       setError(err.message || "Une erreur inattendue s'est produite.");
