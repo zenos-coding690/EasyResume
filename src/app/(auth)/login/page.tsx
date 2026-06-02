@@ -232,9 +232,9 @@ export default function LoginPage() {
 
             {isLogin && (
               <div className="flex justify-end">
-                <a href="#" className="text-sm font-medium text-[#1062FE] hover:underline">
+                <Link href="/forgot-password" className="text-sm font-medium text-[#1062FE] hover:underline">
                   Mot de passe oublié ?
-                </a>
+                </Link>
               </div>
             )}
 

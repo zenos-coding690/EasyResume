@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const { language, toggleLanguage } = useLanguage();
@@ -55,6 +56,7 @@ export function Header() {
         
         {user ? (
           <div className="flex items-center space-x-3">
+            <NotificationBell />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-slate-700">{user.first_name} {user.last_name}</p>
               <div className="flex items-center justify-end space-x-2">
