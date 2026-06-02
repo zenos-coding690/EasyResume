@@ -11,7 +11,7 @@ import { EducationStep } from '@/components/editor/steps/EducationStep';
 import { SkillsStep } from '@/components/editor/steps/SkillsStep';
 import { ReferenceStep } from '@/components/editor/steps/ReferenceStep';
 import { Button } from '@/components/ui/button';
-import { Eye, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, CheckCircle2, Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useResume } from '@/context/ResumeContext';
 import { useTokens } from '@/context/TokenContext';
@@ -184,23 +184,36 @@ function EditorContent() {
           </Button>
           
           {currentStepIndex === steps.length - 1 ? (
-            <Button 
-              onClick={async () => {
-                setSaved(true);
-                await saveResume(resumeId);
-                setTimeout(() => router.push('/dashboard'), 500);
-              }} 
-              disabled={saved}
-              className={`rounded-xl text-white shadow-sm hover:shadow-md transition-all px-6 ${
-                saved ? 'bg-emerald-500 cursor-default' : 'bg-emerald-600 hover:bg-emerald-700'
-              }`}
-            >
-               {saved ? (
-                 <><CheckCircle2 className="w-4 h-4 mr-2" /><span className="hidden sm:inline">Sauvegardé !</span></>
-               ) : (
-                 <><span className="hidden sm:inline">Terminer & Sauvegarder</span> <ChevronRight className="w-4 h-4 ml-2" /></>
-               )}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  setSaved(true);
+                  await saveResume(resumeId);
+                  setTimeout(() => router.push('/dashboard'), 500);
+                }} 
+                className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 transition-all hidden sm:flex"
+              >
+                Quitter
+              </Button>
+              <Button 
+                onClick={async () => {
+                  setSaved(true);
+                  await saveResume(resumeId);
+                  handlePremiumDownload();
+                }} 
+                disabled={isProcessingDownload}
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all px-4 sm:px-6 flex-1 sm:flex-none"
+              >
+                {isProcessingDownload ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                <span className="hidden sm:inline">Télécharger le CV</span>
+                <span className="sm:hidden">Télécharger</span>
+              </Button>
+            </div>
           ) : (
             <Button 
               onClick={nextStep} 
